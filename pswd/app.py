@@ -1,47 +1,31 @@
-from Tkinter import *
+import shelve
+import click
 
-try:
-    import cpickle as pickle
-except:
-    import pickle
-
-db = []
-
-def load():
-    db = pickle.load(open("db.pkl","wb"))
-
-def dump():
-    pickle.dump(db,open("db.pkl","wb"))
+db = shelve.open("pswd")
 
 
-class Application(Frame):
-    def say_hi(self):
-        print "hi there, everyone!"
+@click.command()
+@click.argument('key','value')
+def put(key,value):
+  db[key] = value
 
-    def createWidgets(self):
-        self.QUIT = Button(self)
-        self.QUIT["text"] = "QUIT"
-        self.QUIT["fg"]   = "red"
-        self.QUIT["command"] =  self.quit
+@click.group()
+def cli():
+    pass
 
-        self.QUIT.pack({"side": "left"})
+@click.command()
+@click.argument('key')
+def get(key):
+  return click.echo(db[key])
 
-        self.SAVE = Button(self)
-        self.SAVE["text"] = "SAVE"
-        self.SAVE["fg"] = "black"
-        self.SAVE["command"] = self.save
+@click.command()
+@click.argument('key')
+def delete(key):
+  del db[key]
 
-        self.SAVE.pack({"side":"right"})
+cli.add_command(get)
+cli.add_command(delete)
+cli.add_command(put)
 
-    def save(self):
-    	pickle.dump(db,open("db.pkl","wb"))
-
-    def __init__(self, master=None):
-        Frame.__init__(self, master)
-        self.pack()
-        self.createWidgets()
-
-root = Tk()
-app = Application(master=root)
-app.mainloop()
-root.destroy()
+cli()
+db.close()
